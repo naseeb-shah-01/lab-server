@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<title>Invoice</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style type="text/css">
+			/* @media print { */
+			html,
+			body {
+				font-size: 12px;
+				font-family: sans-serif;
+				font-weight: 500;
+				line-height: 1.4;
+			}
+			body {
+				margin: 0;
+				padding: 50px;
+			}
+			.company-logo {
+				width: 150px;
+			}
+
+			table {
+				border-collapse: collapse;
+			}
+			thead > tr {
+				background-color: slategray;
+				color: white;
+			}
+			td,
+			th {
+				padding: 0.3rem 0.5rem;
+				text-align: left;
+			}
+			th {
+				white-space: nowrap;
+			}
+			.table-striped tbody tr:nth-child(2n) {
+				background-color: #f1f1f1;
+			}
+			.text-right {
+				text-align: right;
+			}
+			.text-bold {
+				font-weight: bold;
+			}
+			.border {
+				border: 1px solid slategray;
+			}
+			.dark {
+				background-color: slategray;
+				color: white;
+			}
+			.valign-start {
+				vertical-align: top;
+			}
+		</style>
+	</head>
+	<body onLoad="printInvoice()">
+		<div style="display: flex; align-items: flex-start; justify-content: space-between">
+			<div>
+				<img src="<%= logo %>" alt="" class="company-logo" />
+				<h3 style="margin-bottom: 0"><%= aekatra.name %></h3>
+				<div><%= aekatra.address.line1 %></div>
+				<div><%= aekatra.address.line2 %></div>
+				<div>
+					<%= aekatra.address.city %>, <%= aekatra.address.state %> - <%=
+					aekatra.address.pincode %>
+				</div>
+				<div>Contact : <%= aekatra.contact %></div>
+				<div>Email : <%= aekatra.email %></div>
+				<% if (aekatra.gst) { %>
+				<div>GSTIN : <%= aekatra.gst %></div>
+				<% } %> <% if (aekatra.gstTCS) { %>
+				<div>GSTIN for TCS : <%= aekatra.gstTCS %></div>
+				<% } %>
+			</div>
+			<div class="text-right">
+				<h1 style="margin-bottom: 2rem">INVOICE</h1>
+				<table>
+					<tr>
+						<td>Date</td>
+						<td class="border"><%= date %></td>
+					</tr>
+					<tr>
+						<td>Invoice #</td>
+						<td class="border"><%= order._id %></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div
+			style="
+				display: flex;
+				justify-content: flex-start;
+				margin-top: 2rem;
+				margin-bottom: 2rem;
+			"
+		>
+			<div style="width: 40%">
+				<div class="dark" style="padding: 3px 5px"><b>Bill To</b></div>
+				<h3 style="margin-bottom: 0; margin-top: 5px"><%= order.sellerDetails.name %></h3>
+				<div><%= order.sellerDetails.billingAddress.line1 %></div>
+				<div><%= order.sellerDetails.billingAddress.line2 %></div>
+				<div>
+					<%= order.sellerDetails.billingAddress.city %>, <%=
+					order.sellerDetails.billingAddress.state %> - <%=
+					order.sellerDetails.billingAddress.pincode %>
+				</div>
+				<div>Contact : <%= order.sellerDetails.contact %></div>
+				<% if (order.sellerDetails.gst) { %>
+				<div>GSTIN : <%= order.sellerDetails.gst %></div>
+				<% } %>
+			</div>
+		</div>
+		<table style="font-size: 0.9rem; width: 100%; margin-bottom: 3rem" class="table-striped">
+			<thead>
+				<tr>
+					<th>Description</th>
+					<th class="text-right">Item Net Amount</th>
+					<th class="text-right">Commission</th>
+					<th class="text-right">Commission Amount</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% for(let item of order.items) { %>
+				<tr>
+					<td>
+						<div style="font-weight: 600; margin-bottom: 5px"><%= item.name %></div>
+						<% if(item.itemType === 'single') { %>
+						<div style="color: gray">
+							<%= item.variant.specifications.map(sp => sp.specificationName + '-' +
+							sp.valueName).join(' | ') %>
+						</div>
+						<% } else { %>
+						<div style="color: gray">
+							<% for (let [index, v] of item.itemSet.variants.entries()) { %>
+							<div style="margin-bottom: 5px">
+								(<%= v.quantity %>) <%= v.specifications.map(sp =>
+								sp.specificationName + '-' + sp.valueName).join(' | ') %>
+							</div>
+							<% } %>
+						</div>
+						<% } %>
+					</td>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.amounts.net, false) %>
+					</td>
+					<td class="text-right valign-start">
+						<%= (item.commission.percentage || 0) %>%
+					</td>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.commission.amounts.net, false) %>
+					</td>
+				</tr>
+				<% } %>
+			</tbody>
+		</table>
+		<div style="display: flex; justify-content: flex-end; margin-bottom: 2rem">
+			<table style="width: auto">
+				<tr>
+					<td>Net Amount</td>
+					<td class="border text-right" style="min-width: 130px">
+						<%= formatRupee(order.commission.netAmt, false) %>
+					</td>
+				</tr>
+				<% if (aekatra.gst) { %> <%
+				if(order.sellerDetails.billingAddress.state.toLowerCase() ===
+				aekatra.address.state.toLowerCase()) { %>
+				<tr>
+					<td>SGST (<%= tf2(order.commission.gst / 2) %>%)</td>
+					<td class="border text-right">
+						<%= formatRupee(tf2(order.commission.gstAmt / 2), false) %>
+					</td>
+				</tr>
+				<tr>
+					<td>CGST (<%= tf2(order.commission.gst / 2) %>%)</td>
+					<td class="border text-right">
+						<%= formatRupee(tf2(order.commission.gstAmt / 2), false) %>
+					</td>
+				</tr>
+				<% } else { %>
+				<tr>
+					<td>IGST (<%= order.commission.gst %>%)</td>
+					<td class="border text-right">
+						<%= formatRupee(order.commission.gstAmt, false) %>
+					</td>
+				</tr>
+				<% } %> <% } %>
+				<tr>
+					<td>TCS (<%= order.commission.tcs %>%)</td>
+					<td class="border text-right">
+						<%= formatRupee(order.commission.tcsAmt, false) %>
+					</td>
+				</tr>
+				<tr>
+					<td>Total Amount (₹)</td>
+					<td class="border text-right">
+						<%= formatRupee((order.commission.totalAmt + order.commission.tcsAmt),
+						false) %>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div style="text-align: right">
+			<p style="margin-bottom: 0; color: gray">
+				<small>This is auto generated invoice. It does not require a signature.</small>
+			</p>
+			<h4 style="margin-top: 0">Thank you for your business!</h4>
+		</div>
+	</body>
+</html>

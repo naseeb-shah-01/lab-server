@@ -1,0 +1,6 @@
+static/**
+build/**
+dist/**
+./local/**
+uploads/**
+node_modules/**

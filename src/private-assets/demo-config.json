@@ -1,0 +1,72 @@
+{
+	"server": {
+		"port": "3888"
+	},
+	"env": "dev|beta|production",
+	"redisUrl": "redis://localhost:6379",
+	"redisPrefix": "aekatra-",
+	"dbUrl": "mongodb://localhost:27017/aekatra-ecommerce",
+	"assetsPath": "assets/",
+	"websiteUrl": "http://localhost:3001/",
+	"uploadsUrl": "http://localhost:3888/uploads/",
+	"uploadPath": "../local/uploads/",
+	"pdfPath": "pdf/",
+	"thumbPath": "thumbs/",
+	"secretKey": "aekatra-api-access",
+	"maintenanceKey": "0e2d5562e1ec6c811178db47fa71d2c56f80486fa89b749bd3b34dcece9be90f",
+	"doSpaces": {
+		"endpoint": "",
+		"accessKeyId": "",
+		"secretAccessKey": "",
+		"s3Path": ""
+	},
+	"email": {
+		"from": "email@email.com",
+		"fromPassword": "email_password",
+		"admin": {
+			"to": ["email@email.com"]
+		}
+	},
+	"razorpay": {
+		"rp_key": "rzp_test_wn48GhgrdGDNjf",
+		"rp_secret": "Wq8w0EVTGAtajpppBePswgnQ",
+		"rp_wh_secret": "aekatra-rp-sign"
+	},
+	"paytm": {
+		"paytm_mid": "RfeBQr77049309957384",
+		"paytm_key": "OaxJlZmvi6GEJzZV",
+		"paytm_website": "WEBSTAGING",
+		"paytm_industry_type": "Retail",
+		"paytm_host": "https://securegw-stage.paytm.in/",
+		"paytm_callback_url": "https://securegw-stage.paytm.in/theia/paytmCallback"
+	},
+	"sms": {
+		"url": "http://sms.staticking.com/index.php/smsapi/httpapi/",
+		"secret": "i5Ase8SkjKcLOwwYSBv0",
+		"sender": "AEKATR"
+	},
+	"demoAccounts": [
+		"1111111111",
+		"9896886555",
+		"9687821454",
+		"1234567890",
+		"8894092617",
+		"9910477751",
+		"9898989898"
+	],
+	"aekartaDetails": {
+		"name": "Aekatra",
+		"gst": "123123123123",
+		"gstTCS": "34234234234",
+		"email": "aekatra21@gmail.com",
+		"contact": "+919910477751",
+		"website": "https://www.aekatra.com",
+		"address": {
+			"line1": "Line 1",
+			"line2": "Line 2",
+			"city": "Rajkot",
+			"state": "Gujarat",
+			"pincode": "360003"
+		}
+	}
+}

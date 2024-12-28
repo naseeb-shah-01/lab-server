@@ -1,0 +1,120 @@
+ route ='/timings/setimings'
+ uses for  update and setimings for product and category
+ accpetebody =
+ /*
+only durationType='week,daily'}
+store timings  for category and product schedules for weekly schedule
+and daily schedule
+ accpted body format:
+ 
+
+     {   durationType:"daily",
+        disable:"false"
+        products:[
+            array of products ids
+        ],
+        categories:[
+            {
+                seller:sellerIds,
+                level: category_level,
+                cat_id:category Ids
+            }
+        ],
+        timings:[
+            
+                {start:1000,
+                end:1200},
+                {start:100,
+                end:200},
+                {start:400,
+                end:600}
+            
+            
+        ]
+    }
+ ===========================================================   
+durationType = 'weekly';
+
+    {
+        durationType:"week",
+        disable:"false"
+        products:[
+            array of products ids
+        ],
+        categories:[
+            {
+                seller:sellerIds,
+                level: category_level,
+                cat_id:category Ids
+            }
+        ],
+        timings:[
+            {day:0,
+             slots:[
+                {start:1000,
+                end:1200},
+                {start:100,
+                end:200},
+                {start:400,
+                end:600}
+             ]
+            },
+             {day:1,
+             slots:[
+                {start:1000,
+                end:1200},
+                {start:100,
+                end:200}, eq 2 am
+                {start:400, eq 4 pm
+                end:600}
+             ]
+            }
+        ]
+    }
+    
+
+*/
+======================================================
+route
+/timings/manualschedule'
+(for manual disable like outstock many other conditons)
+use for   disable product and category for a time period
+accpetebody
+{ startDateTime: date Object, endDateTime:date object, products:[products ids],   categories:[
+            {
+                seller:sellerIds,
+                level: category_level,
+                cat_id:category Ids
+            }
+        ], }
+===========================================
+        '/timings/removemanualschedule'
+removeManuallySchedule(remove manually disable from products and categories)
+accpetebody={
+    category:[array of categories ids]
+    product:[array of products ids]
+}
+==============================================
+'/timings/removeschedule'
+ remove  all schedule(daily and weekly type) from particular category and product
+ accpetebody={
+    category:[categoryids],
+    product:[productids],
+ }
+
+================================================
+'/timings/gettimingsofproduct'
+ get all slots daily and weekly schedule from particular  products
+  accpetebody={
+    product:productid,
+    category:product's max level id (mostly products level3 or level4 id ),
+    day : 0( day of the week in number  like that 0 for sunday   if not send day in  body  intialize current day as day)
+  }
+  ====================================
+'/timings/gettimingsofcategory'
+  get all slots daily and weekly schedule from particular  products using  category id
+
+accpetebody={
+    category:categoryid,
+    day:0( day of the week in number)
+====================================

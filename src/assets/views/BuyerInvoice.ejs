@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<title>Invoice</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style type="text/css">
+			/* @media print { */
+			html,
+			body {
+				font-size: 12px;
+				font-family: sans-serif;
+				font-weight: 500;
+				line-height: 1.4;
+			}
+			body {
+				margin: 0;
+				padding: 50px;
+			}
+			.company-logo {
+				width: 150px;
+			}
+
+			table {
+				border-collapse: collapse;
+			}
+			thead > tr {
+				background-color: slategray;
+				color: white;
+			}
+			td,
+			th {
+				padding: 0.3rem 0.5rem;
+				text-align: left;
+			}
+			th {
+				white-space: nowrap;
+			}
+			.table-striped tbody tr:nth-child(2n) {
+				background-color: #f1f1f1;
+			}
+			.text-right {
+				text-align: right;
+			}
+			.text-bold {
+				font-weight: bold;
+			}
+			.border {
+				border: 1px solid slategray;
+			}
+			.dark {
+				background-color: slategray;
+				color: white;
+			}
+			.valign-start {
+				vertical-align: top;
+			}
+		</style>
+	</head>
+	<body onLoad="printInvoice()">
+		<div style="display: flex; align-items: flex-start; justify-content: space-between">
+			<div>
+				<img src="<%= logo %>" alt="" class="company-logo" />
+				<h3 style="margin-bottom: 0"><%= order.sellerDetails.name %></h3>
+				<div><%= order.sellerDetails.billingAddress.line1 %></div>
+				<div><%= order.sellerDetails.billingAddress.line2 %></div>
+				<div>
+					<%= order.sellerDetails.billingAddress.city %>, <%=
+					order.sellerDetails.billingAddress.state %> - <%=
+					order.sellerDetails.billingAddress.pincode %>
+				</div>
+				<div>Contact : <%= order.sellerDetails.contact %></div>
+				<!-- <div>Email : <%= aekatra.email %></div>
+				<% if (aekatra.gst) { %>
+				<div>GSTIN : <%= aekatra.gst %></div>
+				<% } %> <% if (aekatra.gstTCS) { %>
+				<div>GSTIN for TCS : <%= aekatra.gstTCS %></div>
+				<% } %> -->
+			</div>
+			<div class="text-right">
+				<h1 style="margin-bottom: 2rem">INVOICE</h1>
+				<table>
+					<tr>
+						<td>Date</td>
+						<td class="border"><%= date %></td>
+					</tr>
+					<tr>
+						<td>Invoice #</td>
+						<td class="border"><%= (order.invoiceNumber || order._id) %></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div
+			style="
+				display: flex;
+				justify-content: flex-start;
+				margin-top: 2rem;
+				margin-bottom: 2rem;
+			"
+		>
+			<div style="width: 40%">
+				<div class="dark" style="padding: 3px 5px"><b>Bill To</b></div>
+				<h3 style="margin-bottom: 0; margin-top: 5px"><%= order.buyerDetails.name %></h3>
+				<div><%= order.buyerDetails.billingAddress.line1 %></div>
+				<div><%= order.buyerDetails.billingAddress.line2 %></div>
+				<div>
+					<%= order.buyerDetails.billingAddress.city %>, <%=
+					order.buyerDetails.billingAddress.state %> - <%=
+					order.buyerDetails.billingAddress.pincode %>
+				</div>
+				<% if (order.buyerDetails.gst) { %>
+				<div>GSTIN : <%= order.buyerDetails.gst %></div>
+				<% } %>
+			</div>
+			<div style="width: 40%; margin-left: 2rem">
+				<div class="dark" style="padding: 3px 5px"><b>Ship To</b></div>
+				<h3 style="margin-bottom: 0; margin-top: 5px"><%= order.buyerDetails.name %></h3>
+				<div><%= order.buyerDetails.shippingAddress.line1 %></div>
+				<div><%= order.buyerDetails.shippingAddress.line2 %></div>
+				<div>
+					<%= order.buyerDetails.shippingAddress.city %>, <%=
+					order.buyerDetails.shippingAddress.state %> - <%=
+					order.buyerDetails.billingAddress.pincode %>
+				</div>
+			</div>
+		</div>
+		<table style="font-size: 0.9rem; width: 100%; margin-bottom: 3rem" class="table-striped">
+			<thead>
+				<tr>
+					<th>Description</th>
+					<th class="text-right">Unit Price</th>
+					<th class="text-right">Quantity</th>
+					<th class="text-right">Main Amount</th>
+					<th class="text-right">Discount</th>
+					<th class="text-right">Net Amount</th>
+					<% if(order.items.some(item => item.amounts.gst)) { %> <%
+					if(order.buyerDetails.billingAddress.state.toLowerCase() ===
+					order.sellerDetails.billingAddress.state.toLowerCase()) { %>
+					<th class="text-right">SGST</th>
+					<th class="text-right">CGST</th>
+					<% } else { %>
+					<th class="text-right">IGST</th>
+					<% } %> <% } %>
+					<th class="text-right">Total</th>
+				</tr>
+			</thead>
+			<tbody>
+				<% for(let item of order.items) { %>
+				<tr>
+					<td>
+						<div style="font-weight: 600; margin-bottom: 5px"><%= item.name %></div>
+						<% if(item.itemType === 'single') { %>
+						<div style="color: gray">
+							<%= item.variant.specifications.map(sp => sp.specificationName + '-' +
+							sp.valueName).join(' | ') %>
+						</div>
+						<% } else { %>
+						<div style="color: gray">
+							<% for (let [index, v] of item.itemSet.variants.entries()) { %>
+							<div style="margin-bottom: 5px">
+								(<%= v.quantity %>) <%= v.specifications.map(sp =>
+								sp.specificationName + '-' + sp.valueName).join(' | ') %>
+							</div>
+							<% } %>
+						</div>
+						<% } %>
+					</td>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.unitPrice, false) %>
+					</td>
+					<td class="text-right valign-start"><%= item.quantity %></td>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.amounts.main, false) %>
+					</td>
+					<td class="text-right valign-start">
+						<% if (item.discount) { %> <%= formatRupee(item.amounts.discount, false) %>
+						<div style="color: gray; font-size: 0.7rem"><%= item.discount %>%</div>
+						<% } else { %> - <% } %>
+					</td>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.amounts.net, false) %>
+					</td>
+					<% if(order.buyerDetails.billingAddress.state.toLowerCase() ===
+					order.sellerDetails.billingAddress.state.toLowerCase()) { %> <%
+					if(item.amounts.gst) { %>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.amounts.gst / 2, false) %>
+						<div style="color: gray; font-size: 0.7rem"><%= tf2(item.gst / 2) %>%</div>
+					</td>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.amounts.gst / 2, false) %>
+						<div style="color: gray; font-size: 0.7rem"><%= tf2(item.gst / 2) %>%</div>
+					</td>
+					<% } else { %>
+					<td class="text-right valign-start">-</td>
+					<td class="text-right valign-start">-</td>
+					<% } %> <% } else { %> <% if(item.amounts.gst) { %>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.amounts.gst, false) %>
+						<div style="color: gray; font-size: 0.7rem"><%= tf2(item.gst) %>%</div>
+					</td>
+					<% } else { %>
+					<td class="text-right valign-start">-</td>
+					<% } %> <% } %>
+					<td class="text-right valign-start">
+						<%= formatRupee(item.amounts.total, false) %>
+					</td>
+				</tr>
+				<% } %>
+			</tbody>
+		</table>
+		<div style="display: flex; justify-content: flex-end; margin-bottom: 2rem">
+			<table style="width: auto">
+				<% if(order.order.discount) { %>
+				<tr>
+					<td>Main Amount</td>
+					<td class="border text-right" style="min-width: 130px">
+						<%= formatRupee(order.order.mainAmt, false) %>
+					</td>
+				</tr>
+				<tr>
+					<td>Discounts</td>
+					<td class="border text-right">
+						<%= formatRupee(order.order.discountAmt, false) %>
+					</td>
+				</tr>
+				<% } %>
+				<tr>
+					<td>Net Amount</td>
+					<td class="border text-right"><%= formatRupee(order.order.netAmt, false) %></td>
+				</tr>
+				<tr>
+					<td>Taxes</td>
+					<td class="border text-right"><%= formatRupee(order.order.gstAmt, false) %></td>
+				</tr>
+				<tr>
+					<td>Total Amount (₹)</td>
+					<td class="border text-right">
+						<%= formatRupee(order.order.totalAmt, false) %>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div style="text-align: right">
+			<p style="margin-bottom: 0; color: gray">
+				<small>This is auto generated invoice. It does not require a signature.</small>
+			</p>
+			<h4 style="margin-top: 0">Thank you for your business!</h4>
+		</div>
+	</body>
+</html>
