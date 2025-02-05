@@ -1931,14 +1931,14 @@ export const getRiderLongDistanceDetails = async (data) => {
 		throwError(500);
 	}
 };
-new CronJob(
-	'* * * * *',
-	function () {
-		monthPaidSettlement({});
-	},
-	null,
-	true
-);
+// new CronJob(
+// 	'* * * * *',
+// 	function () {
+// 		monthPaidSettlement({});
+// 	},
+// 	null,
+// 	true
+// );
 
 export const monthPaidSettlement = async (data) => {
 	try {

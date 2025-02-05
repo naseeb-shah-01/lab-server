@@ -6,8 +6,8 @@ import customerAuth from './customers';
 import riderAuth from './rider';
 import sellerAuth from './seller'
 router.use('/admin', adminAuth);
-router.use('/customer', customerAuth);
-router.use('/rider', riderAuth);
+router.use('/labtechnician', customerAuth);
+router.use('/doctor', riderAuth);
 router.use('/seller', sellerAuth);
 
 

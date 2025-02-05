@@ -71,6 +71,89 @@ export const getCoupons = async (user, reqQuery) => {
 	return availableCoupons;
 };
 
+
+export const getCouponsMultipleSellers = async (user, data) => {
+	// Destructure and set default values from input data
+	let {
+		sellers,
+		shopDelivery,
+		platformDelivery = true,
+		total = Number.MAX_SAFE_INTEGER
+	} = data;
+
+	// Convert seller IDs to ObjectId array
+	let sellersArray = sellers.map((x) => Types.ObjectId(x.id));
+
+	// Fetch applicable coupons
+	let coupons = await CouponModel.find({
+		$or: [
+			{ seller: { $in: sellersArray } }, // Seller-specific coupons
+			{ seller: { $size: 0 } }           // General coupons
+		],
+		expiry: { $gte: new Date() },          // Only non-expired coupons
+		$expr: { $gt: ['$maxUseCount', '$globalUseCount'] } // Usage within limits
+	}).lean();
+
+	// Fetch buyer's used coupons and build a map for quick lookups
+	let buyerUsedCoupons = (
+		await Customer.findOne({ _id: user._id }).select('inelegibleCoupons')
+	)?.inelegibleCoupons.reduce((acc, couponId) => {
+		acc[couponId] = (acc[couponId] || 0) + 1;
+		return acc;
+	}, {});
+
+	// Build available coupons with appropriate flags and reasons
+	let availableCoupons = coupons.map((coupon) => {
+		let disable = false;
+		let disableReason = '';
+
+		// Check if coupon usage limit is reached
+		if (coupon.count === buyerUsedCoupons?.[coupon._id.toString()]) {
+			disable = true;
+			disableReason = `This coupon can be applied only ${coupon.count} times per user`;
+		}
+
+		// Check minimum order requirement for general coupons
+		if (coupon.seller.length === 0 && coupon.minOrder > total) {
+			disable = true;
+			disableReason = `Add items worth ₹${coupon.minOrder} or more to unlock this coupon`;
+		}
+
+		// Check platform delivery restriction
+		if (!platformDelivery && coupon.type === 'delivery') {
+			disable = true;
+			disableReason = 'You can use this with Platform Delivery only.';
+		}
+
+		// Check minimum order requirement for seller-specific coupons
+		if (coupon.seller.length > 0) {
+			const invalidSeller = coupon.seller.find(
+				(sellerId) => coupon.minOrder > (data.sellers.find((s) => s.id === sellerId)?.amount || 0)
+			);
+			if (invalidSeller) {
+				disable = true;
+				disableReason = `Add items worth ₹${coupon.minOrder} or more to unlock this coupon`;
+			}
+		}
+
+		// Return the coupon with additional fields
+		return {
+			...coupon,
+			id: coupon._id,
+			disable,
+			disableReason
+		};
+	});
+
+    
+	// Sort coupons by disable status
+	availableCoupons.sort((a, b) => a.disable - b.disable);
+
+	return availableCoupons;
+};
+
+
+
 // Gets the applied coupon which is currently applied by the user
 // used at display cart /cart and placing order /place
 export const getCustomerCoupon = async (user) => {

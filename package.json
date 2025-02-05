@@ -6,7 +6,8 @@
 	"scripts": {
 		"start": "node dist/dist/server.js",
 		"dev": "concurrently \"npm run dev:serve\" \"npm run lint:watch\"",
-		"dev:serve": "onchange -i -k \"src/**/*\" -- npm run dev:ts-node",
+		"dev:serve": "nodemon --watch src --ext ts,js,json --exec ts-node -T src/server.ts"
+,
 		"dev:ts-node": "ts-node -T src/server.ts",
 		"lint": "tsc --preserveWatchOutput",
 		"lint:watch": "tsc --watch --preserveWatchOutput",
@@ -70,6 +71,7 @@
 		"@types/redis": "^2.8.28",
 		"@types/shelljs": "^0.8.8",
 		"concurrently": "^6.0.0",
+		"nodemon": "^3.1.9",
 		"onchange": "^7.1.0",
 		"semver": "^7.3.4",
 		"shelljs": "^0.8.4",

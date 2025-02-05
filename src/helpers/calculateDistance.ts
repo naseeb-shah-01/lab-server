@@ -170,15 +170,6 @@ function haversineDistance(point1, point2) {
     return { route, totalDistance };
   }
   
-  // Example usage
-  const buyer = { latitude: 28.6448, longitude: 77.216721 }; // Example coordinates for the buyer
-  const sellers = [
-    { id: 1, name: "Seller A", latitude: 28.7041, longitude: 77.1025 },
-    { id: 2, name: "Seller B", latitude: 28.5355, longitude: 77.3910 },
-    { id: 3, name: "Seller C", latitude: 28.4595, longitude: 77.0266 },
-  ];
+
   
-  const result = findBestRoute(buyer, sellers);
-  console.log('Best route:', result.route);
-  console.log('Total distance:', result.totalDistance, 'km');
   

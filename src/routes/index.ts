@@ -17,7 +17,7 @@ const router = Router();
 router.use('/auth', withoutAuth(), auth);
 router.use('/website', website);
 router.use('/admin', withAuth(), admin);
-router.use('/customer',  customer);
+// router.use('/customer', withAuth(),  customer);
 
 router.use('/rider', withAuth(), rider);
 

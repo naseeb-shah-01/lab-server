@@ -69,6 +69,7 @@ import {
 	addWalletStatus,
 	checkValidCoupon,
 	getCoupons,
+	getCouponsMultipleSellers,
 	getCustomerCoupon,
 	removeCoupon
 } from '../../../controllers/customers/coupons';
@@ -104,6 +105,10 @@ router.delete('/wishlist/:id', (req, res) => {
 router.get('/coupons', (req, res) => {
 	res.handle(getCoupons, [req.getUser(), req.query]);
 });
+router.post('/coupons/sellers', (req, res) => {
+	res.handle(getCouponsMultipleSellers, [req.getUser(), req.body]);
+});
+
 
 router.get('/appliedcoupon', (req, res) => {
 	res.handle(getCustomerCoupon, [req.getUser()]);

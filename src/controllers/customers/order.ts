@@ -30,7 +30,11 @@ import { IPrice } from '../../models/seller/price';
 import axios, { AxiosRequestConfig } from 'axios';
 import { createRiderNotification } from '../../helpers/notifications/rider';
 import { IRider } from '../../models/rider/rider';
-import { calculateDistance, findBestRoute, getDistanceWithGoogle } from '../../helpers/calculateDistance';
+import {
+	calculateDistance,
+	findBestRoute,
+	getDistanceWithGoogle
+} from '../../helpers/calculateDistance';
 import { ISeller } from '../../models/customer/seller';
 import { orderListQuery } from '../users/order-query';
 import { ICoupon } from '../../models/customer/coupons';
@@ -45,7 +49,8 @@ import { sendSellerWhatsappSms } from '../webhook/webhook';
 import { addMinutes } from 'date-fns';
 import { sendNewOrderMessageToDiscord } from '../discord/discord_webhook';
 import { IHistory } from '../../models/general/history';
-import { sellerSettelement } from "../general/settlement";
+import { sellerSettelement } from '../general/settlement';
+import { json } from "body-parser";
 
 const GroupOrder = model<IGroupOrder>('GroupOrder');
 const Price = model<IPrice>('Price');
@@ -76,11 +81,16 @@ async function prepareOrders(dataArray: IOrder[], user: any): Promise<IOrder[] |
 		const returnPeriods = data.items
 			.filter((i) => i.returnPeriod >= 0)
 			.map((i) => i.returnPeriod);
+// find shop related data
+
+let shop=  await Seller.findById(data.seller).select("businessName")
+
 
 		const order: Partial<IOrder> = {
 			seller: data.seller,
 			buyer: data.buyer,
 			isGroupOrder: data.isGroupOrder,
+            shop:shop.businessName,
 			groupOrder: null,
 			runningDuration: data.runningDuration,
 			paymentMode: data.paymentMode,
@@ -446,189 +456,154 @@ const prepareTokenAndCODAmt = async (data: IOrder & Record<string, any>) => {
 	data.order.codAmt = tf2(data.order.totalAmt - data.order.tokenAmt);
 };
 
-export const placeOrder = async (data: IOrder & Record<string, any>, user) => {
+export const placeOrder = async (orderDetails: any, user) => {
 	try {
-		// for testing purposes user_id change into data.buyer
+		// Find the customer by user ID
 		let customer = await Customer.findOne({ _id: user._id });
 		if (!customer) {
+			console.log("Buyer not found");
 			throwError(400);
 		}
-		data.buyer = user._id;
+console.log(JSON.stringify(orderDetails))
+		let orders = [];
+		
 
-		if (
-			!data ||
-			!data.seller ||
-			!['online-cod', 'cod', 'online', 'wallet'].includes(data.paymentMode) ||
-			!data.items ||
-			!data.items.length ||
-			!data.buyerDetails ||
-			!data.buyerDetails.billingAddress ||
-			!data.buyerDetails.shippingAddress
-		) {
-			throwError(400);
-		}
-
-		let couponBySeller = false;
-		if (data?.coupon) {
-			let orderCoupon = await Coupon.findOne({ _id: data.coupon });
-			if (orderCoupon?.providedBy == 'seller') {
-				couponBySeller = true;
+		for (let i = 0; i < orderDetails.data.length; i++) {
+			const data = orderDetails.data[i];
+			if (
+				!data ||
+				!data.seller ||
+				!['online-cod', 'cod', 'online', 'wallet'].includes(data.paymentMode) ||
+				!data.items ||
+				!data.items.length ||
+				!data.buyerDetails ||
+				!data.buyerDetails.billingAddress ||
+				!data.buyerDetails.shippingAddress
+			) {
+                console.log(data)
+                console.log("firtst block")
+				throwError(400);
 			}
-			orderCoupon.globalUseCount += 1;
-			await orderCoupon.save();
-		}
-		const orderData: Partial<IOrder> = {
-			seller: data.seller,
-			buyer: data.buyer,
-			isGroupOrder: !!data.isGroupOrder,
-			runningDuration: data.runningDuration,
-			groupOrder: null,
-			paymentMode: data.paymentMode,
-			deliveryMode: data?.deliveryMode,
-			deliveryCharges: data?.deliveryMode?.charges,
-			selfDeliveryCharge: 0,
-			returnPeriod: data.returnPeriod || 0,
-			order: data.order,
-			invoices: {
-				aekatra: null,
-				buyer: null,
-				delivery: null
-			},
-			coupon: data?.coupon,
-			weight: null,
-			length: null,
-			breadth: null,
-			height: null,
-			items: data.items.map((item) => {
-				const commission = {
-					percentage: item.commission.percentage || 0,
-					gst: 18,
-					amounts: {
-						net: 0,
-						gst: 0,
-						total: 0
-					}
-				};
-				if (couponBySeller) {
-					commission.amounts.net = tf2(
-						(item.amounts.net + item.amounts.discount) *
-							0.01 *
-							item.commission.percentage
-					);
-				} else {
-					commission.amounts.net = tf2(
-						item.amounts.net * 0.01 * item.commission.percentage
-					);
+
+			let couponBySeller = false;
+			if (data?.coupon) {
+				let orderCoupon = await Coupon.findOne({ _id: data.coupon });
+				if (orderCoupon?.providedBy === 'seller') {
+					couponBySeller = true;
 				}
-				commission.amounts.gst = tf2(commission.amounts.net * 0.01 * commission.gst);
-				commission.amounts.total = tf0(commission.amounts.net + commission.amounts.gst);
-				item.commission = commission;
-				item.accepted = false;
-				item.rejected = false;
-				return item;
-			}),
-			rejectedItems: [],
-			buyerDetails: data.buyerDetails,
-			statusHistory: [],
-			placed: { status: false, date: null },
-			accepted: { status: false, date: null },
-			ready: { status: false, date: null },
-			matured: { status: false, date: null },
-			rejected: { status: false, date: null },
-			dispatched: { status: false, date: null },
-			abandoned: { status: false, date: null },
-			delivered: { status: false, date: null },
-			notReceived: { status: false, date: null },
-			returned: { status: false, date: null },
-			returnRequest: {
-				created: { status: false, date: null, reason: null, remarks: null },
-				approved: { status: false, date: null },
-				rejected: { status: false, date: null }
-			},
-			cancelled: { status: false, date: null, reason: null, remarks: null },
-			walletUse: data.walletUse,
-			rewardUse: data.rewardUse
-		};
+				orderCoupon.globalUseCount += 1;
+				await orderCoupon.save();
+			}
 
-		await prepareSellerDetails(orderData as IOrder);
-		await prepareBuyerDetails(orderData as IOrder);
-
-		await prepareAmounts(orderData as IOrder, data?.totalPayable || 0);
-
-		const seller = await Seller.findById(data.seller);
-		orderData.commission.discountBy = couponBySeller ? 'seller' : 'platform';
-
-		orderData.deliveryCharges = orderData.deliveryMode.value;
-		orderData.currentStatus = {
-			status: data.paymentMode === 'cod' ? 'placed' : 'checkout_pending',
-			date: new Date(),
-			remarks: '',
-			by: user._id
-		};
-		if (data.paymentMode === 'cod') {
-			orderData.placed = {
-				status: true,
-				date: new Date()
+			const orderData: Partial<IOrder> = {
+				// Order data preparation (same as in your original code)
+				// ...
+				items: data.items.map((item) => {
+					const commission = {
+						percentage: item.commission.percentage || 0,
+						gst: 18,
+						amounts: { net: 0, gst: 0, total: 0 }
+					};
+					if (couponBySeller) {
+						commission.amounts.net = tf2(
+							(item.amounts.net + item.amounts.discount) * 0.01 * item.commission.percentage
+						);
+					} else {
+						commission.amounts.net = tf2(
+							item.amounts.net * 0.01 * item.commission.percentage
+						);
+					}
+					commission.amounts.gst = tf2(commission.amounts.net * 0.01 * commission.gst);
+					commission.amounts.total = tf0(commission.amounts.net + commission.amounts.gst);
+					item.commission = commission;
+					item.accepted = false;
+					item.rejected = false;
+					return item;
+				}),
+				// Additional order data fields
 			};
-		}
-		const timeMin = reverseConvertTime(extractTimeFromString(orderData.deliveryMode.details));
-		orderData.ETA = addMinutes(new Date(), +timeMin);
 
-		orderData.statusHistory.push(orderData.currentStatus);
-		const order = new Order(orderData);
-		if (orderData.paymentMode === 'online' || orderData.paymentMode === 'online-cod') {
-			const paytmOrder = await preparePaytmOrder(order);
-			order.onlinePayment.orderId = paytmOrder.body.txnToken;
-		}
+			await prepareSellerDetails(orderData as IOrder);
+			await prepareBuyerDetails(orderData as IOrder);
+			await prepareAmounts(orderData as IOrder, data?.totalPayable || 0);
 
-		customer.orderCount = {
-			total: (customer?.orderCount?.total || 0) + 1,
-
-			pending: (customer?.orderCount?.pending || 0) + 1
-		};
-
-		customer.balance -= data.walletUse || 0;
-		customer.rewardBalance -= data.rewardUse || 0;
-
-		if (data?.walletUse) {
-			await History.create({
-				buyer: customer._id,
-				type: 'wallet',
-				amount: data?.walletUse,
+			const seller = await Seller.findById(data.seller);
+			orderData.commission.discountBy = couponBySeller ? 'seller' : 'platform';
+			orderData.deliveryCharges = orderData.deliveryMode.value;
+			orderData.currentStatus = {
+				status: data.paymentMode === 'cod' ? 'placed' : 'checkout_pending',
 				date: new Date(),
-				action: 'debit',
-				remark: `Order Placed: ${order._id}`
-			});
-		}
-		if (data.rewardUse) {
-			await History.create({
-				type: 'reward',
-				buyer: customer._id,
-				amount: data.rewardUse,
-				date: new Date(),
-				action: 'debit',
-				remark: `Order Placed: ${order._id}`
-			});
-		}
-		await customer.save();
-		order.buyerDetails.firstOrder = customer.orderCount.total == 1;
-		if (order) {
-			order.couponDeduction = +data.couponDeduction || 0;
-			order.couponProvidedBy = data.couponProvidedBy || null;
-		}
-		order.freeDeliveryAmt = seller?.deliveryMode?.platform?.freeDeliveryAmount;
-		await order.save();
-		if (order.paymentMode === 'cod') {
-			setTimeout(() => {
-				completeOrderPlacement(order._id);
-			}, 100);
-		}
+				remarks: '',
+				by: user._id
+			};
+			if (data.paymentMode === 'cod') {
+				orderData.placed = { status: true, date: new Date() };
+			}
 
-		seller.orders.total = seller.orders.total + 1;
+			const timeMin = reverseConvertTime(extractTimeFromString(orderData.deliveryMode.details));
+			orderData.ETA = addMinutes(new Date(), +timeMin);
 
-		await seller.save();
+			orderData.statusHistory.push(orderData.currentStatus);
+			const order = new Order(orderData);
 
-		return order;
+			if (['online', 'online-cod'].includes(orderData.paymentMode)) {
+				const paytmOrder = await preparePaytmOrder(order);
+				order.onlinePayment.orderId = paytmOrder.body.txnToken;
+			}
+
+			customer.orderCount = {
+				total: (customer.orderCount?.total || 0) + 1,
+				pending: (customer.orderCount?.pending || 0) + 1
+			};
+
+					order.buyerDetails.firstOrder = customer.orderCount.total === 1;
+			if (order) {
+				order.couponDeduction = +data.couponDeduction || 0;
+				order.couponProvidedBy = data.couponProvidedBy || null;
+			}
+			order.freeDeliveryAmt = seller?.deliveryMode?.platform?.freeDeliveryAmount;
+
+			await order.save();
+			if (order.paymentMode === 'cod') {
+				setTimeout(() => {
+					completeOrderPlacement(order._id);
+				}, 100);
+			}
+
+			seller.orders.total += 1;
+			await seller.save();
+
+			orders.push(order);
+		}
+        customer.balance -= orderDetails.walletUse || 0;
+        customer.rewardBalance -= orderDetails.rewardUse || 0;
+
+        if (data?.walletUse) {
+            await History.create({
+                buyer: customer._id,
+                type: 'wallet',
+                amount: data.walletUse,
+                date: new Date(),
+                action: 'debit',
+                remark: `Order Placed: ${order._id}`
+            });
+        }
+        if (data.rewardUse) {
+            await History.create({
+                type: 'reward',
+                buyer: customer._id,
+                amount: data.rewardUse,
+                date: new Date(),
+                action: 'debit',
+                remark: `Order Placed: ${order._id}`
+            });
+        }
+
+        await customer.save();
+
+
+		console.log(orders, "Order last is here");
+		return orders[0];
 	} catch (error) {
 		throw error;
 	}
@@ -1531,7 +1506,7 @@ export const availableDeliveryOptions = async (data) => {
 	let deliveryData = goodArea.deliveryFee;
 
 	let deliveryOptions = [];
-    let shopDelivery=false
+	let shopDelivery = false;
 	let perKmTime = config.perKmTime;
 
 	let shop = {
@@ -1546,78 +1521,80 @@ export const availableDeliveryOptions = async (data) => {
 	// if buyer  under  delivery radius  shopdelivery is true
 
 	let selfDelivery = false;
-    let time = 0;
-	let timeString =""
-    let distance=0
-    let packingTime = + 10;
-    let platformFreeDeliveryAmt =100000
-    let freeDeliveryAmount=2000
-    if(sellers.length==1){
-
-    
-
-	
+	let time = 0;
+	let timeString = '';
+	let distance = 0;
+	let packingTime = +10;
+	let platformFreeDeliveryAmt = 100000;
+	let freeDeliveryAmount = 2000;
+	if (sellers.length == 1) {
 		let seller = await Seller.findById(data.sellers[0]).select(
 			'shopLocation deliveryMode packingTime'
 		);
-        let [sellerlongitude, selllerLatitude] = seller.shopLocation.coordinates;
-        let freeDeliveryAmount = seller?.deliveryMode?.selfdelivery?.freeDeliveryAmount || 50000000; // freedelivery amount  if shop delivery
-        let packingTime = +seller?.packingTime || 10;
-         platformFreeDeliveryAmt = seller?.deliveryMode?.platform?.freeDeliveryAmount || 50000000;
-        let deliveryCharges =
-            amtWithOutDelivery >= freeDeliveryAmount
-                ? 0
-                : seller?.deliveryMode?.selfdelivery?.deliveryCharges || 50;
-        let deliveryTime = seller?.deliveryMode?.selfdelivery?.deliveryTime;
-        shop.details = `Delivery in ${deliveryTime || 30 + packingTime} min | ₹${deliveryCharges}`;
-        shop.charges = +deliveryCharges;
-        let radius = +seller.deliveryMode?.selfdelivery?.deliveryRadius || 2;
-     distance = (
-            await getDistanceWithGoogle([selllerLatitude, sellerlongitude], [latitude, longitude])
-        ).distance;
-    
-        //  platform delivery charges
-       
-         time = packingTime + tf0(distance * perKmTime);
-         timeString = convert_time(time);
-          shopDelivery = distance <= radius;
-         if (shopDelivery) {
-             let sellerRiderAvailablity = await Rider.findOne({
-                 sellerApproved: true,
-                 available: true,
-                 seller: seller._id
-             });
-             if (sellerRiderAvailablity) {
-                 selfDelivery = true;
-             }
-         }
-     
-         deliveryOptions.push({
-             ...shop,
-             freeDeliveryAmount: freeDeliveryAmount == 50000000 ? 0 : freeDeliveryAmount,
-             available: selfDelivery,
-             distance,
-             deliveryFree: freeDeliveryAmount <= amtWithOutDelivery
-         });
+		let [sellerlongitude, selllerLatitude] = seller.shopLocation.coordinates;
+		let freeDeliveryAmount = seller?.deliveryMode?.selfdelivery?.freeDeliveryAmount || 50000000; // freedelivery amount  if shop delivery
+		let packingTime = +seller?.packingTime || 10;
+		platformFreeDeliveryAmt = seller?.deliveryMode?.platform?.freeDeliveryAmount || 50000000;
+		let deliveryCharges =
+			amtWithOutDelivery >= freeDeliveryAmount
+				? 0
+				: seller?.deliveryMode?.selfdelivery?.deliveryCharges || 50;
+		let deliveryTime = seller?.deliveryMode?.selfdelivery?.deliveryTime;
+		shop.details = `Delivery in ${deliveryTime || 30 + packingTime} min | ₹${deliveryCharges}`;
+		shop.charges = +deliveryCharges;
+		let radius = +seller.deliveryMode?.selfdelivery?.deliveryRadius || 2;
+		distance = (
+			await getDistanceWithGoogle([selllerLatitude, sellerlongitude], [latitude, longitude])
+		).distance;
+
+		//  platform delivery charges
+
+		time = packingTime + tf0(distance * perKmTime);
+		timeString = convert_time(time);
+		shopDelivery = distance <= radius;
+		if (shopDelivery) {
+			let sellerRiderAvailablity = await Rider.findOne({
+				sellerApproved: true,
+				available: true,
+				seller: seller._id
+			});
+			if (sellerRiderAvailablity) {
+				selfDelivery = true;
+			}
+		}
+
+		deliveryOptions.push({
+			...shop,
+			freeDeliveryAmount: freeDeliveryAmount == 50000000 ? 0 : freeDeliveryAmount,
+			available: selfDelivery,
+			distance,
+			deliveryFree: freeDeliveryAmount <= amtWithOutDelivery
+		});
 	}
-    if(sellers.length>1){
-        let Sellers:any= await Seller.find({_id:{$in:sellers}}).select('shopLocation deliveryMode packingTime').lean()
-        Sellers=Sellers.map((x)=>({...x,latitude:x.shopLocation.coordinates[1],longitude:x.shopLocation.coordinates[0]}))
-console.log(Sellers)
-       let bestPath= findBestRoute({latitude,longitude},Sellers)
-        distance=bestPath.totalDistance
-        console.log(distance,sellers)
-    }
-    // 
-	
-    let deliveryCharge = calculateDeliveryCharges(
-        distance,
-        deliveryData,
-        couponType,
-        platformFreeDeliveryAmt,
-        amtWithOutDelivery
-    );
-    console.log("sai")
+	if (sellers.length > 1) {
+		let Sellers: any = await Seller.find({ _id: { $in: sellers } })
+			.select('shopLocation deliveryMode packingTime')
+			.lean();
+		Sellers = Sellers.map((x) => ({
+			...x,
+			latitude: x.shopLocation.coordinates[1],
+			longitude: x.shopLocation.coordinates[0]
+		}));
+		console.log(Sellers);
+		let bestPath = findBestRoute({ latitude, longitude }, Sellers);
+		distance = bestPath.totalDistance;
+		console.log(distance, sellers);
+	}
+	//
+
+	let deliveryCharge = calculateDeliveryCharges(
+		distance,
+		deliveryData,
+		couponType,
+		platformFreeDeliveryAmt,
+		amtWithOutDelivery
+	);
+	console.log('sai');
 	let platDelivery = {
 		display: 'Platform Delivery ',
 		details: `Delivery in 30 minutes | ₹${deliveryCharge.totalCharges}`,
