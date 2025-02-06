@@ -5,7 +5,7 @@ import {
     mongooseSchemaOptions
 } from '../common-schema-props';
 
-export interface ITest extends Document, CommonSchemaProps {
+export interface IReport extends Document, CommonSchemaProps {
     name: string;
     type: string;
     min: string;
@@ -14,7 +14,7 @@ export interface ITest extends Document, CommonSchemaProps {
     group: string;
     note?: string;
 }
-const Test = new Schema(
+const Report = new Schema(
     {
         type: {
             type: String,
@@ -50,5 +50,5 @@ const Test = new Schema(
     }
 );
 
-const TestModal = model<ITest>('Test', Test);
-export default TestModal;
+const ReportModel = model<IReport>('Report',Report);
+export default ReportModel;

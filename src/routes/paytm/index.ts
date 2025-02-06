@@ -3,12 +3,9 @@ import { Router } from 'express';
 import PaytmChecksum from 'paytmchecksum';
 import qs from 'qs';
 import config from '../../../config.json';
-import {
-	capturedPaytmOrderPayment,
-	failedPaytmOrderPayment
-} from '../../controllers/customers/order';
+
 import log from '../../helpers/logger';
-import { capturedPaytmSubscriptionPayment } from '../../controllers/customers/customer';
+
 const router = Router();
 
 router.post('/', (req, res) => {
@@ -78,9 +75,9 @@ router.post('/', (req, res) => {
 							}
 						} = data;
 						if (resultStatus === 'TXN_SUCCESS') {
-							capturedPaytmOrderPayment(orderId, txnId, head.signature);
+							// capturedPaytmOrderPayment(orderId, txnId, head.signature);
 						} else {
-							failedPaytmOrderPayment(orderId, txnId, head.signature);
+							// failedPaytmOrderPayment(orderId, txnId, head.signature);
 						}
 					})
 					.catch((error) => {
@@ -162,9 +159,9 @@ router.post('/subscription', (req, res) => {
 							}
 						} = data;
 						if (resultStatus === 'TXN_SUCCESS') {
-							capturedPaytmSubscriptionPayment(orderId);
+							// capturedPaytmSubscriptionPayment(orderId);
 						} else {
-							failedPaytmOrderPayment(orderId, txnId, head.signature);
+							// failedPaytmOrderPayment(orderId, txnId, head.signature);
 						}
 					})
 					.catch((error) => {
@@ -224,14 +221,14 @@ router.post('/txnStatus', (req, res) => {
 					} = data;
 					if (req.body.paymentType == 'subscription') {
 						if (resultInfo.resultStatus === 'TXN_SUCCESS') {
-							capturedPaytmSubscriptionPayment(orderId);
+							// capturedPaytmSubscriptionPayment(orderId);
 						}
 						res.send({ data: resultInfo.resultStatus });
 					} else {
 						if (resultInfo.resultStatus === 'TXN_SUCCESS') {
-							capturedPaytmOrderPayment(orderId, txnId, head.signature);
+							// capturedPaytmOrderPayment(orderId, txnId, head.signature);
 						} else {
-							failedPaytmOrderPayment(orderId, txnId, head.signature);
+							// failedPaytmOrderPayment(orderId, txnId, head.signature);
 						}
 					}
 				})

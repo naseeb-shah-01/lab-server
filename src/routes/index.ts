@@ -6,7 +6,7 @@ import auth from './auth';
 import admin from './admin';
 import website from './website';
 import customer from './customer';
-import rider from './rider';
+
 import maintenance from './general/maintenance';
 import versions from './general/versions';
 import { withoutAuth, withAuth } from '../middlewares/common';
@@ -19,7 +19,7 @@ router.use('/website', website);
 router.use('/admin', withAuth(), admin);
 // router.use('/customer', withAuth(),  customer);
 
-router.use('/rider', withAuth(), rider);
+
 
 // Maintenance Check Route
 router.use('/check-maintenance', withoutAuth(), (req, res) => {

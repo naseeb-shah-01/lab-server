@@ -4,7 +4,7 @@ import { model } from 'mongoose';
 import config from '../../../config.json';
 import { throwError } from '../../helpers/throw-errors';
 import { getSessionById } from '../../helpers/server-helper';
-import { createUserSession } from '../users/session';
+// import { createUserSession } from '../users/session';
 import { sendSMS } from '../../helpers/sms';
 import { smsTemplates } from '../../helpers/sms-templates';
 
@@ -82,8 +82,8 @@ export const verifyLoginOtp = async (data, session, sessionID) => {
 		user.sessions = user.sessions;
 		await user.save();
 
-		let sessionData = createUserSession(user);
-		session.adminUser = sessionData;
+		// let sessionData = createUserSession(user);
+		// session.adminUser = sessionData;
 
 		return {
 			user: user,

@@ -4,7 +4,7 @@ import {
 	mongooseSchemaProps,
 	mongooseSchemaOptions
 } from '../common-schema-props';
-import { ICustomer } from '../customer/customer';
+
 
 interface IMessage {
 	chat?: string;
@@ -20,7 +20,7 @@ interface IRemarks {
 export interface IWhatsapp extends Document, CommonSchemaProps {
 	contact?: string; //mobile Number
 	name?: string; //name
-	customerId?: string | ICustomer;
+	customerId?: string 
 	message?: IMessage[];
 	messageId?: string;
 	templateName?: string;
@@ -54,7 +54,7 @@ const whatsappSchema = new Schema<IWhatsapp>(
 		...mongooseSchemaProps,
 		contact: String,
 		name: String,
-		customerId: { type: Schema.Types.ObjectId, ref: 'Customer' },
+		// customerId: { type: Schema.Types.ObjectId, ref: 'Customer' },
 		message: [messageSchema],
 		pastIssues: [remarksSchema],
 		messageId: String,

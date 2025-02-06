@@ -34,7 +34,7 @@ Database.initModels();
 enableCORS(app);
 import paytm from './routes/paytm';
 import airtel from './routes/airtel';
-import webhook from './routes/webhook';
+// import webhook from './routes/webhook';
 
 usePaytm(app, paytm);
 useSession(app, config.secretKey);
@@ -44,7 +44,7 @@ useEnhancedExpress(app);
 enableStaticFileServer(app, config.assetsPath, '/assets');
 enableStaticFileServer(app, config.uploadPath, '/uploads');
 useAirtel(app, airtel);
-useWebhook(app, webhook);
+// useWebhook(app, webhook);
 app.set('view engine', 'ejs');
 
 // require routes
@@ -59,14 +59,8 @@ app.use((req, res) => {
 // Database Connect
 import { refreshRedisData } from './helpers/redis-refresh';
 import { redisClient } from './helpers/redis-helper';
-import { startSocketServer } from './helpers/socket';
-import { startCancelOrderSchedular } from './schedulars/cancel-order-schedular';
-import { startOrderMaturitySchedular } from './schedulars/order-maturity-schedular';
-// import { paytmSettlementScheduler } from './schedulars/settlementScheduler';
-import { startShopStatusUpdateSchedular } from './schedulars/Shop-status-update-schedular';
-// import { startProductStatusUpdater } from './schedulars/product-status-update-schedular';
-import { ridersClosingSchedular } from './schedulars/ridersClosingSchedular';
-import { startWhatsappMessageSchedular } from './schedulars/whatsapp-message-schedular';
+// import { startSocketServer } from './helpers/socket';
+
 import { startFcmNotificationSchedular } from './schedulars/fcm-notification-schedular';
 (async () => {
 	await Database.connect();
@@ -78,14 +72,7 @@ import { startFcmNotificationSchedular } from './schedulars/fcm-notification-sch
 	refreshRedisData();
 
 	const server = startServer(app, config.server.port);
-	startSocketServer(server);
+	// startSocketServer(server);
 
-	startCancelOrderSchedular();
-	startOrderMaturitySchedular();
-	// paytmSettlementScheduler();
-	startShopStatusUpdateSchedular();
-	// startProductStatusUpdater();
-	ridersClosingSchedular();
-	startWhatsappMessageSchedular();
 	startFcmNotificationSchedular();
 })();

@@ -1,10 +1,8 @@
 import axios from 'axios';
 import config from '../../../config.json';
-import { ICustomer } from '../../models/customer/customer';
+
 import { model, Types } from 'mongoose';
-import { IOrder } from '../../models/order/order';
-const Customer = model<ICustomer>('Customer');
-const Order = model<IOrder>('Order');
+
 const ObjectId = Types.ObjectId;
 
 export const sendNewOrderMessageToDiscord = async (orderData: any) => {
@@ -38,7 +36,7 @@ export const sendNewWhatsappMessageToDiscord = async (from: any, text: string) =
 			return;
 		}
 
-		const buyer: any = await Customer.findOne({ contact: from });
+		const buyer: any = {}
 		let name: any;
 		if (buyer) {
 			name = buyer.name;
@@ -68,9 +66,7 @@ export const sendNewOrderReturnRequestMessageToDiscord = async (orderId: any) =>
 			return;
 		}
 
-		const order: any = await Order.findOne({ _id: ObjectId(orderId) }).populate(
-			'rider seller buyer'
-		);
+		const order: any = {}
 
 		const data = {
 			content: `**New Return Request** \n\nOrder ID : ${orderId}\n\nSeller : ${
