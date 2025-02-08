@@ -1,0 +1,85 @@
+{
+	"server": {
+		"port": "3888"
+	},
+	"env": "dev",
+	"redisUrl": "redis://default:ELrAUGEsnJEXFA4S5zIus9sSygGCTXCJ@redis-12340.c290.ap-northeast-1-2.ec2.redns.redis-cloud.com:12340",
+	"redisPrefix": "lab-",
+
+	"dbUrl": "mongodb+srv://portfolioiqdashboard:1Ox49QXtNfhrPkD3@cluster0.w4mj1.mongodb.net/lab?retryWrites=true&w=majority&appName=Cluster0",
+	"discordUrl": "https://discord.com/api/weboks/1157307405730852955/ipYBHdFXtgcHTxsM4A_3AxPGoHWG2MnBHl5X2IR8E_07u4V0IzxzFFY4hC_",
+	"discordWhatsappMsgUrl": "https://discoom/api/wehooks/1164116368849903716/jLT9PpW5ZGXegApUDh78CQSnBq3qXaz7KZA5aPdZNHXRAfvXwRwk7vkilc_2qe",
+	"discordPaymentUrl": "dumy",
+	"assetsPath": "assets/",
+	"websiteUrl": "http://localhost:3001/",
+	"uploadsUrl": "http://localhost:3888/uploads/",
+	"uploadPath": "../local/uploads/",
+	"pdfPath": "pdf/",
+	"thumbPath": "thumbs/",
+	"secretKey": "aekatra-api-access",
+
+	"googleDistanceApiKey": "AIzaSyBv82MXWEwNroSm9HVPvIfGTSPVlfqLg9",
+	"airtelKey": "YUvVHxg2M6iI4Jlq3NpfFZz8o5srW0BbdD7mLkCa9jEytRwnXKPTAScOQeuty7VvHxG2m6iI4jLq3nXpFfJzU8OgS1Rw0BbDdE5MlKcA9oZsNtQWkPaeCTruTh",
+	"maintenanceKey": "0e2d5562e1ec6c81178db47fa71d2c6f80486fa89b749bd3b34dcece9be90f",
+	"doSpaces": {
+		"endpoint": "",
+		"accessKeyId": "",
+		"secretAccessKey": "",
+		"s3Path": ""
+	},
+	"email": {
+		"from": "shahtech276@gmail.com",
+		"fromPassword": "itcdkvsgagwkqyfw",
+		"admin": {
+			"to": ["lineo3551@gmail.com"]
+		}
+	},
+	"razorpay": {
+		"rp_key": "rzp_test_wn48GgrdGDNjf",
+		"rp_secret": "Wq8w0EVTGAtjpppBePswgnQ",
+		"rp_wh_secret": "aekatra-r-sign"
+	},
+	"paytm": {
+		"paytm_mid": "RfeBQr774909957384",
+		"paytm_key": "OaxJlZmvi6JzZV",
+		"paytm_website": "WEBSTAGING",
+		"paytm_industry_type": "Retail",
+		"paytm_host": "https://securegw-stage.paytm.in/",
+		"paytm_callback_url": "https://securegw-stage.paytm.in/theia/paytmCallback"
+	},
+	"sms": {
+		"url": "http://sms.staticking.com/index.php/smsapi/httpapi/",
+		"secret": "i5Ase8SjKLOwwYSBv0",
+		"sender": "AEKTR"
+	},
+	"demoAccounts": [
+		"1111111111",
+		"9896886555",
+		"9687821454",
+		"1234567890",
+		"8894092617",
+		"9910477751",
+		"9898989898",
+		"2222222222",
+		"1234567890"
+	],
+
+	"maxDistanceToDelivery": 12,
+	"whatsappApiToken": "EAALFZBe9bSPsOzKt7ueF33CjmgtUs8CtVvHBObcJJUWMYBNG9OJaG1RdxGrS4XQyMXU9JTWP2xEUPyJQbohV1hlS3qmlyi8WSRXw7nUeepM3ZCMjZCMijm0e9CqPXtprf5wCzZB7rH2DWomiQG694v7KOkR46Is1N27PRrNNiBdSXRUzgZAwIwwH1gycd8hwPuJBkIlWyoQ",
+	"perKmTime": 5,
+	"aekartaDetails": {
+		"name": "Aekatra",
+		"gst": "123123123123",
+		"gstTCS": "34234234234",
+		"email": "aekatra21@gmail.com",
+		"contact": "+919910477751",
+		"website": "https://www.aeatra.com",
+		"address": {
+			"line1": "Line 1",
+			"line2": "Line 2",
+			"city": "Rajkot",
+			"state": "Gujarat",
+			"pincode": "360003"
+		}
+	}
+}

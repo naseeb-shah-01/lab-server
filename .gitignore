@@ -6,7 +6,7 @@ dist
 local
 release
 debug
-config*.json
+
 firebase-credentials.json
 seller-firebase-credentials.json
 rider-firebase-credentials.json
