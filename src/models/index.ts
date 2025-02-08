@@ -7,6 +7,9 @@ require("./general/version")
 require("./general/test")
 require('./general/testGroup')
 require("./general/report")
+require("./general/lab")
+require("./general/patient")
+require("./general/doctor")
 
 
 

@@ -3,7 +3,7 @@ import { createTestGroup } from "../../../controllers/testGroup/testGroup";
 
 const router= Router()
 
-router.post("create-group",(req,res)=>{
+router.post("/create",(req,res)=>{
     res.handle(createTestGroup,req.body)
 })
 

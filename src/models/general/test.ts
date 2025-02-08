@@ -4,7 +4,8 @@ import {
 	mongooseSchemaProps,
 	mongooseSchemaOptions
 } from '../common-schema-props';
-import { max, min } from 'date-fns';
+
+
 export interface ITest extends Document, CommonSchemaProps {
 	name: string;
 	type: string;
@@ -13,9 +14,18 @@ export interface ITest extends Document, CommonSchemaProps {
 	uom: string;
 	group: string;
 	note?: string;
+    ranges?:{
+        group:string,
+        min:number,
+        max:number
+    }[]
 }
 const Test = new Schema(
 	{
+		group: {
+			type: Schema.Types.ObjectId,
+			ref: 'Group'
+		},
 		type: {
 			type: String,
 			required: true
@@ -30,19 +40,21 @@ const Test = new Schema(
 		max: {
 			type: Number
 		},
-		date: {
-			type: Date,
-			required: true
-		},
+
 		uom: {
 			type: String,
 			required: true
 		},
 		note: {
-			type: String,
-			
+			type: String
 		},
-
+        ranges: [
+            {
+                group: { type: String, required: true },
+                min: { type: Number, required: true },
+                max: { type: Number, required: true }
+            }
+        ],
 		...mongooseSchemaProps
 	},
 	{

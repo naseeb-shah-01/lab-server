@@ -8,7 +8,7 @@ import { max, min } from 'date-fns';
 export interface IGroup extends Document, CommonSchemaProps {
     name: string;
     type: string;
-   note:string;
+   note?:string;
     
 }
 const TestGroup = new Schema(
