@@ -18,7 +18,7 @@
 		"build:debug": "npm run cleanup:debug && tsc && npm run assets:debug",
 		"build:release": "npm run cleanup:release && tsc --sourceMap false --outDir dist && npm run assets:release",
 		"version": "node version-update.js",
-		"build": "tsc",
+		"build": "npm run build:release",
           
   "vercel-build": "npm run build"
     },
