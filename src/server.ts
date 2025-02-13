@@ -16,7 +16,7 @@ import {
 	useWebhook
 } from './helpers/server-helper';
 import Database from './helpers/database';
-import { initializeFirebase } from './helpers/notifications/fcm';
+// import { initializeFirebase } from './helpers/notifications/fcm';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -25,7 +25,7 @@ app.set('trust proxy', 1);
 useMorgan(app);
 
 // initialize firebase
-initializeFirebase();
+// initializeFirebase();
 
 // init database
 Database.initModels();
