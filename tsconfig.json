@@ -3,13 +3,13 @@
         "module": "CommonJS",
         "moduleResolution": "node",
         "target": "es6",
-        "outDir": "debug",
+        "outDir": "dist",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitAny": false,
         "sourceMap": true,
         "resolveJsonModule": true,
-        "importHelpers": true,
+        "importHelpers": true
     },
     "include": [
         "src/**/*"
